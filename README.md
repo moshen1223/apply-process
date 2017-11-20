@@ -1,4 +1,5 @@
 # apply-process
+<<<<<<< HEAD
 
 > A Vue.js project
 
@@ -19,3 +20,6 @@ npm run build --report
 ```
 
 For a detailed explanation on how things work, check out the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+=======
+vue single page
+>>>>>>> 2d6d40e8bea6e36f97a796599d88f6cb0849e64d
