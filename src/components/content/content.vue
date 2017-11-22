@@ -14,10 +14,13 @@
                   </el-form-item>
                   <el-form-item label="添加表结构" :label-width="formLabelWidth">
                     <div class="add-table-title">
-                      <h4><span>表结构名称(英文)</span><span>表结构名称(中文)</span></h4>
+                      <h4><span>表结构名称</span></h4>
                       <ul ref="addStructureContent">
                         <li v-for="(item, index) in addStructureArr" :key="index">
-                          <input type="text"/><input type="text"/>
+                          <input type="text"/>
+                        </li>
+                        <li>
+                          <input type="text" value="附件" readonly="true"/>
                         </li>
                       </ul>
                       <div class="add-item" @click="addItem">
@@ -46,11 +49,25 @@
             &nbsp;&nbsp;&nbsp;&nbsp;包括营业执照/组织机构代码证/信用等级证书、高新技术证书、质量认证证书、信用等级证明等；以及与项目方向相关的重点实验室、国家工程中心、工程实验等。<br/>
             &nbsp;&nbsp;&nbsp;&nbsp;其中，营业执照/组织机构代码证/信用等级证书是所有单位必须要提供的材料。<br>
             &nbsp;&nbsp;&nbsp;&nbsp;项目牵头单位需要提供近两年审计报告。</p>
-            <div class="addcontent"><el-button @click="contentTableVisible = true" type="text">添加表内容</el-button></div>
-            <el-dialog title="添加表内容" :visible.sync="contentTableVisible">
+            <div class="addcontent"><el-button @click="showAddTable" type="text">添加表内容</el-button></div>
+            <el-dialog title="添加表内容" :visible.sync="contentTableVisible" :show-close="false">
               <el-form :model="contentform">
                 <el-form-item v-for="(item, index) in structureTittleE" :key="index" :label="structureField[item]" :label-width="contentLabelWidth">
-                  <el-input v-model="contentform[item]" auto-complete="off"></el-input>
+                  <el-input v-if="structureField[item] != '附件'" v-model="contentform[item]" auto-complete="off"></el-input>
+                  <div v-if="structureField[item] == '附件'">
+                    <div class="row">
+                        <input id="fileAttach" type="file" name="file"  style="display: none" />
+                        <button id="btnAttach" type="button" >选择附件</button>
+                        <input id="AttachFilename" readonly="true" type="text"/>
+                    </div>
+                    <div class="row">
+                        <div class="progress">
+                            <div id="Attachbar">
+                                根据需要，选择是否上传
+                            </div>
+                        </div>
+                    </div>
+                  </div>
                 </el-form-item>
               </el-form>
               <div slot="footer" class="dialog-footer">
@@ -58,14 +75,28 @@
                 <el-button type="primary" @click="addTableContent">确 定</el-button>
               </div>
             </el-dialog>
-            <el-dialog title="修改表内容" :visible.sync="updatecontentTableVisible">
+            <el-dialog title="修改表内容" :visible.sync="updatecontentTableVisible" :show-close="false">
               <el-form :model="contentform">
                 <el-form-item v-for="(item, index) in structureTittleE" :key="index" :label="structureField[item]" :label-width="contentLabelWidth">
-                  <el-input v-model="contentform[item]" auto-complete="off"></el-input>
+                  <el-input v-if="structureField[item] != '附件'" v-model="contentform[item]" auto-complete="off"></el-input>
+                  <div v-if="structureField[item] == '附件'">
+                    <div class="row">
+                        <input id="fileAttachChange" type="file" name="file"  style="display: none" />
+                        <button id="btnAttachChange" type="button" >选择附件</button>
+                        <input id="AttachFilenameChange" readonly="true" type="text"/>
+                    </div>
+                    <div class="row">
+                        <div class="progress">
+                            <div id="AttachbarChange">
+                                根据需要，选择是否重新上传
+                            </div>
+                        </div>
+                    </div>
+                  </div>
                 </el-form-item>
               </el-form>
               <div slot="footer" class="dialog-footer">
-                <el-button @click="updatecontentTableVisible = false">取 消</el-button>
+                <el-button @click="closeUpdateTableContent">取 消</el-button>
                 <el-button type="primary" @click="updateTableContent">确 定</el-button>
               </div>
             </el-dialog>
@@ -76,10 +107,10 @@
                   </el-form-item>
                   <el-form-item label="表结构" :label-width="formLabelWidth">
                     <div class="change-table-title">
-                      <h4><span>表结构名称(英文)</span><span>表结构名称(中文)</span></h4>
+                      <h4><span>表结构名称</span></h4>
                       <ul ref="changeStructureContent">
                         <li v-for="(item, index) in changeStructureArr" :key="index">
-                          <input type="text"/><input type="text"/>
+                          <input type="text"/>
                         </li>
                       </ul>
                       <div class="add-item" @click="changeItem">
@@ -102,13 +133,19 @@
                     <el-tooltip effect="dark" content="修改表结构" placement="bottom">
                       <b @click="changeTableStructure()" class="edit"><i class="el-icon-edit"></i></b>
                     </el-tooltip>
+                    <el-tooltip effect="dark" content="删除该表" placement="bottom">
+                      <b @click="delTableStructure()" class="edit"><i class="el-icon-delete"></i></b>
+                    </el-tooltip>
                   </li>
                   <li v-for="(con, max) in tableContent" :key="max">
-                    <el-tooltip v-for="(item, index) in structureTittleE" :key="index" effect="dark" :content="con.content[item]" placement="bottom">
-                      <b>{{con.content[item]}}</b>
+                    <el-tooltip v-for="(item, index) in structureTittleE"  :key="index" effect="dark" :content="structureTittleC[index] != '附件'?con.content[item]: '下载后查看'" placement="bottom">
+                      <b v-if="structureTittleC[index] != '附件'">{{con.content[item]}}</b><b style="color:#409EFF; cursor: pointer;" v-if="structureTittleC[index] == '附件'">下载</b>
                     </el-tooltip>
                     <el-tooltip effect="dark" content="修改该条目" placement="bottom">
-                      <b class="edit" @click="changeTableContent(con._id, con)"><i class="el-icon-edit"></i></b>
+                      <b class="edit"><i @click="changeTableContent(con._id, con)" class="el-icon-edit"></i></b>
+                    </el-tooltip>
+                    <el-tooltip effect="dark" content="删除该条目" placement="bottom">
+                      <b class="edit"><i @click="delTableContent(con._id)" class="el-icon-delete"></i></b>
                     </el-tooltip>
                   </li>
                   <li class="pages">
@@ -124,18 +161,6 @@
                   </li>
                 </ul>
             </div>
-            <!-- <el-upload
-              class="upload-demo"
-              action="https://jsonplaceholder.typicode.com/posts/"
-              :on-preview="handlePreview"
-              :on-remove="handleRemove"
-              multiple
-              :limit="3"
-              :on-exceed="handleExceed"
-              :file-list="fileList">
-              <el-button size="small" type="primary">点击上传</el-button>
-              <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
-            </el-upload> -->
         </div>
     </div>
 </template>
@@ -177,8 +202,8 @@ export default {
         structureName: '',
         changeStructureArr: [],
         changeStructureForm: {},
-        // fileList: [{name: 'food.jpeg', url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'}, 
-        // {name: 'food2.jpeg', url: 'https://fuss10.elemecdn.com/3/63/4e7f3a15429bfda99bce42a18cdd1jpeg.jpeg?imageMogr2/thumbnail/360x360/format/webp/quality/100'}]
+        uploadtoken: '',
+        value1: ''
     }
   },
   computed:{
@@ -190,9 +215,21 @@ export default {
     }
   },
   mounted(){
-    this.getTableStructure(this.tabCurrentPage,PageSize)
+    this.getTableStructure(this.tabCurrentPage,PageSize);
+    this.getuploadToken();
   },
   methods:{
+    // 获取上传时的token
+    getuploadToken(){
+      this.$http({
+        url: API.Interface.getuploadToken('sizhiqian@izhixue.cn','JQmvuu4y1fnSd'),
+        method: 'GET'
+      }).then((res)=>{
+        this.uploadtoken = res.data;
+      }).catch((error)=>{
+        console.log(error)
+      })
+    },
     // 选择tab
     selectTable(index,item){
         this.structureTittleC = [];
@@ -223,50 +260,12 @@ export default {
       this.tabIndex = 0;
       this.getTableStructure(this.tabCurrentPage, PageSize)
     },
-    // 切换内容页面
-    handleContentChange(ev){
-      this.currentContentPage = ev;
-      this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
-    },
     // 关闭添加表结构弹框
     closeTableStructure(){
       this.tableFormVisible = false;
       this.structureName = '';
       this.addStructureArr = [];
       this.structureForm = {};
-    },
-    // 添加表结构
-    setTableStructure(){
-      for(let i=0 ,len = this.$refs['addStructureContent'].children.length; i<len; i++){
-        let key = this.$refs['addStructureContent'].children[i].children[0].value;
-        let val = this.$refs['addStructureContent'].children[i].children[1].value;
-        if( key && val ){
-          this.structureForm[key] = val;
-        }
-      }
-      this.$http({
-        url: API.Interface.createTableS(this.token),
-        method: 'POST',
-        data: querystring.stringify({
-            "name": this.structureName,
-            "structure": JSON.stringify(this.structureForm),
-            "author": this.userId
-        })
-      }).then((res)=>{
-        if(res.data.code == 0){
-          this.$message({
-            message: '添加成功!',
-            type: 'success'
-          });
-          this.tableFormVisible = false;
-          this.structureName = '';
-          this.addStructureArr = [];
-          this.structureForm = {};
-          this.getTableStructure(this.tabCurrentPage, PageSize);
-        }
-      }).catch((error)=>{
-        console.log(error)
-      })
     },
     // 获取表结构
     getTableStructure(page,count){
@@ -297,70 +296,42 @@ export default {
         console.log(error)
       })
     },
-    // 获取表结构下内容
-    getTableContent(structureId, page, count){
+    // 添加表结构
+    setTableStructure(){
+      let count = 0;
+      for(let i = 0, len = this.$refs['addStructureContent'].children.length; i<len; i++){
+          let val = this.$refs['addStructureContent'].children[i].children[0].value;
+          if(val){
+            count += 1;
+            this.structureForm[`th${count}`] = val;
+          }
+      };
+      if(this.structureName == ''){
+        this.$message({
+          message: '表名称不能为空！',
+          type: 'warning'
+        })
+        return;
+      };
       this.$http({
-        url: API.Interface.getTableC(structureId, page, count),
-        methods: 'GET'
-      }).then((res)=>{
-        if(res.data.code==0){
-          this.tableContent = res.data.tcs;
-          this.contentPageTotal = res.data.total;
-          this.currentContentPage = res.data.page;
-        }
-      }).catch((error)=>{
-        console.log(error)
-      })
-    },
-    // 添加表内容
-    addTableContent(){
-      this.$http({
-          url: API.Interface.createTableC(this.token),
-          method: 'POST',
-          data: querystring.stringify({
-              "structureId": this.structureId,
-              "content": JSON.stringify(this.contentform),
-              "author": this.structureAuthorID
-          })
+        url: API.Interface.createTableS(this.token),
+        method: 'POST',
+        data: querystring.stringify({
+            "name": this.structureName,
+            "structure": JSON.stringify(this.structureForm),
+            "author": this.userId
+        })
       }).then((res)=>{
         if(res.data.code == 0){
           this.$message({
             message: '添加成功!',
             type: 'success'
-          })
-          this.contentTableVisible = false;
-          this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
-          this.contentform = {}
-        }
-      }).catch((error)=>{
-        console.log(error)
-      })
-    },
-    //改变表内容
-    changeTableContent(id, con){
-      this.tableContentId = id;
-      this.updatecontentTableVisible = true;
-      this.contentform = con.content;
-    },
-    // 实际修改表内容
-    updateTableContent(){
-      this.$http({
-        url: API.Interface.updateTableC(this.token),
-        method: 'POST',
-        data: querystring.stringify({
-          "author" : this.userId,
-          "content" : JSON.stringify(this.contentform),
-          "id" : this.tableContentId,
-        })
-      }).then((res)=>{
-        if(res.data.code == 0){
-          this.$message({
-            message: '修改成功!',
-            type: 'success'
-          })
-          this.updatecontentTableVisible = false;
-          this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
-          this.contentform = {}
+          });
+          this.tableFormVisible = false;
+          this.structureName = '';
+          this.addStructureArr = [];
+          this.structureForm = {};
+          this.getTableStructure(this.tabCurrentPage, PageSize);
         }
       }).catch((error)=>{
         console.log(error)
@@ -371,25 +342,25 @@ export default {
       this.updateStructureTableVisible = true;
       for(let item in this.selectTableStructure.structure){
         let obj = {};
-          obj[item] = this.selectTableStructure.structure[item];
+            obj[item] = this.selectTableStructure.structure[item];
         this.changeStructureArr.push(obj)
       }
       setTimeout(()=>{
         for(let i=0 ,len = this.$refs['changeStructureContent'].children.length; i<len; i++){
           for(let key in this.changeStructureArr[i]){
-            this.$refs['changeStructureContent'].children[i].children[0].value = key;
-            this.$refs['changeStructureContent'].children[i].children[1].value = this.changeStructureArr[i][key];
+            this.$refs['changeStructureContent'].children[i].children[0].value = this.changeStructureArr[i][key];
           }
         }
       },200);
     },
     // 修改表结构
     updateTableStructure(){
+      let count = 0;
       for(let i=0 ,len = this.$refs['changeStructureContent'].children.length; i<len; i++){
-        let key = this.$refs['changeStructureContent'].children[i].children[0].value;
-        let val = this.$refs['changeStructureContent'].children[i].children[1].value;
-        if(key && val){
-          this.changeStructureForm[key] = val;
+        let val = this.$refs['changeStructureContent'].children[i].children[0].value;
+        if(val){
+          count += 1;
+          this.changeStructureForm[`th${count}`] = val;
         }
       }
       if(Object.getOwnPropertyNames(this.changeStructureForm).length>0){
@@ -436,21 +407,197 @@ export default {
         });
       }
     },
-    //关闭更新表结构弹框
+    // 删除这张表
+    delTableStructure(){
+      this.$http({
+        url: API.Interface.delTableS(this.structureId, this.token),
+        method: 'GET',
+      }).then((res)=>{
+        if(res.data.code == 0){
+          this.$message({
+              message: '删除成功!',
+              type: 'success'
+          });
+          this.getTableStructure(this.tabCurrentPage,PageSize);
+          setTimeout(()=>{
+            if(this.tabIndex != 0){
+              this.structureId = this.tableList[this.tabIndex]._id;
+              this.structureAuthorID = this.tableList[this.tabIndex].author._id;
+              this.selectTableStructure = this.tableList[this.tabIndex];
+              this.structureField = this.tableList[this.tabIndex].structure;
+              this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
+              for (let title in this.structureField) {
+                this.structureTittleE.push(title);
+                this.structureTittleC.push(this.structureField[title]);
+                this.contentform[title] = '';
+              }
+            }
+          },200);
+        }
+      }).catch((error)=>{
+        console.log(error)
+      })
+    },
+    // 关闭更新表结构弹框
     closeUpdateTableStructure(){
       this.updateStructureTableVisible = false;
       this.changeStructureArr = [];
       this.changeStructureForm = {};
     },
-    // 关于文件上传
-    handleRemove(file, fileList) {
-      console.log(file, fileList);
+    // 获取表结构下内容
+    getTableContent(structureId, page, count){
+      this.$http({
+        url: API.Interface.getTableC(structureId, page, count),
+        methods: 'GET'
+      }).then((res)=>{
+        if(res.data.code==0){
+          this.tableContent = res.data.tcs;
+          this.contentPageTotal = res.data.total;
+          this.currentContentPage = res.data.page;
+        }
+      }).catch((error)=>{
+        console.log(error)
+      })
     },
-    handlePreview(file) {
-      console.log(file);
+    // 切换内容页面
+    handleContentChange(ev){
+      this.currentContentPage = ev;
+      this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
     },
-    handleExceed(files, fileList) {
-      this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`);
+    // 显示表内容弹框
+    showAddTable(){
+      this.contentTableVisible = true;
+      let that = this;
+      //选择文件
+      this.$nextTick(()=>{
+        $('#btnAttach').on('click',function () {
+            $('#fileAttach').click();
+        })
+        //执行上传
+        $('#fileAttach').hexUpload({
+            cms: 'http://cms.izhixue.cn/',
+            token: that.uploadtoken,
+            add: function (data) {
+                $('#AttachFilename').val(data.files[0].name);
+            },
+            done: function (data) {
+                $('#Attachbar').text('100%');
+                that.structureTittleC.forEach((item,index)=>{
+                  if(item == "附件"){
+                    that.contentform[that.structureTittleE[index]] = '' + data.result.ResourceID;
+                  }
+                })
+            },
+            progress: function (data) {
+                //执行回调
+                var percentVal = Math.round((data.loaded * 100) / data.total).toFixed(2) + '%';
+                $('#Attachbar').text(percentVal);
+            }
+        });
+      });
+    },
+    // 添加表内容
+    addTableContent(){
+      this.$http({
+          url: API.Interface.createTableC(this.token),
+          method: 'POST',
+          data: querystring.stringify({
+              "structureId": this.structureId,
+              "content": JSON.stringify(this.contentform),
+              "author": this.structureAuthorID
+          })
+      }).then((res)=>{
+        if(res.data.code == 0){
+          this.$message({
+            message: '添加成功!',
+            type: 'success'
+          })
+          this.contentTableVisible = false;
+          this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
+          this.contentform = {}
+        }
+      }).catch((error)=>{
+        console.log(error)
+      })
+    },
+    // 关闭修改表内容弹框
+    closeUpdateTableContent(){
+        this.updatecontentTableVisible = false;
+        this.contentform = {};
+    },
+    // 改变表内容
+    changeTableContent(id, con){
+      this.tableContentId = id;
+      this.updatecontentTableVisible = true;
+      this.contentform = con.content;
+      let that = this;
+      this.$nextTick(()=>{
+        $('#btnAttachChange').on('click',function () {
+            $('#fileAttachChange').click();
+        })
+        //执行上传
+        $('#fileAttachChange').hexUpload({
+            cms: 'http://cms.izhixue.cn/',
+            token: that.uploadtoken,
+            add: function (data) {
+                $('#AttachFilenameChange').val(data.files[0].name);
+            },
+            done: function (data) {
+                $('#AttachbarChange').text('100%');
+                that.structureTittleC.forEach((item,index)=>{
+                  if(item == "附件"){
+                    that.contentform[that.structureTittleE[index]] = '' + data.result.ResourceID;
+                  }
+                })
+            },
+            progress: function (data) {
+                //执行回调
+                var percentVal = Math.round((data.loaded * 100) / data.total).toFixed(2) + '%';
+                $('#Attachbar').text(percentVal);
+            }
+        });
+      });
+    },
+    // 实际修改表内容
+    updateTableContent(){
+      this.$http({
+        url: API.Interface.updateTableC(this.token),
+        method: 'POST',
+        data: querystring.stringify({
+          "author" : this.userId,
+          "content" : JSON.stringify(this.contentform),
+          "id" : this.tableContentId,
+        })
+      }).then((res)=>{
+        if(res.data.code == 0){
+          this.$message({
+            message: '修改成功!',
+            type: 'success'
+          })
+          this.updatecontentTableVisible = false;
+          this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
+          this.contentform = {}
+        }
+      }).catch((error)=>{
+        console.log(error)
+      })
+    },
+    // 删除该条表内容
+    delTableContent(id){
+      this.$http({
+        url: API.Interface.delTableC(id, this.userId, this.token),
+        method: 'GET'
+      }).then((res)=>{
+        if(res.data.code == 0){
+          this.$message({
+            message: '删除成功!',
+            type: 'success'
+          })
+          this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
+        }
+      }).catch((error)=>{
+        console.log(error);
+      })
     }
   }
 }
@@ -488,14 +635,11 @@ export default {
       border: 1px solid #d8dce5
       border-radius: 4px
       h4
-        display: flex
         span
-          flex: 1
-          border-right: 1px solid #d8dce5
+          display: inline-block
+          width: 100%
           text-align: center
           line-height: 30px
-          &:last-child
-            border-right: none
       ul
         li
           display: flex
@@ -507,14 +651,11 @@ export default {
             outline: none
             font-size: 14px
             width: 100%
-            padding-left: 5px
+            text-align: center
             -webkit-box-sizing: border-box
             -moz-box-sizing: border-box
             -o-box-sizing: border-box
             box-sizing: border-box
-            border-right: 1px solid #d8dce5
-            &:last-child
-              border-right: none
       .add-item
         height: 30px
         line-height: 30px
@@ -539,14 +680,11 @@ export default {
       border: 1px solid #d8dce5
       border-radius: 4px
       h4
-        display: flex
         span
-          flex: 1
-          border-right: 1px solid #d8dce5
           text-align: center
           line-height: 30px
-          &:last-child
-            border-right: none
+          width: 100%
+          display: inline-block
       ul
         li
           display: flex
@@ -558,14 +696,11 @@ export default {
             outline: none
             font-size: 14px
             width: 100%
-            padding-left: 5px
+            text-align: center
             -webkit-box-sizing: border-box
             -moz-box-sizing: border-box
             -o-box-sizing: border-box
             box-sizing: border-box
-            border-right: 1px solid #d8dce5
-            &:last-child
-              border-right: none
       .add-item
         height: 30px
         line-height: 30px
@@ -603,8 +738,10 @@ export default {
             border-right: 1px solid #999
             border-bottom: 1px solid #999
           .edit
-            flex: 0 0 60px
+            flex: 0 0 50px
             cursor: pointer
+            i
+              padding: 10px
         .pages
           border-bottom: 1px solid #999
           border-right: 1px solid #999
