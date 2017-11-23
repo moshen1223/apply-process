@@ -45,15 +45,16 @@
             </div>
         </div>
         <div class="detail">
-            <p><br>
-            &nbsp;&nbsp;&nbsp;&nbsp;包括营业执照/组织机构代码证/信用等级证书、高新技术证书、质量认证证书、信用等级证明等；以及与项目方向相关的重点实验室、国家工程中心、工程实验等。<br/>
-            &nbsp;&nbsp;&nbsp;&nbsp;其中，营业执照/组织机构代码证/信用等级证书是所有单位必须要提供的材料。<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;项目牵头单位需要提供近两年审计报告。</p>
             <div class="addcontent"><el-button @click="showAddTable" type="text">添加表内容</el-button></div>
             <el-dialog title="添加表内容" :visible.sync="contentTableVisible" :show-close="false">
               <el-form :model="contentform">
                 <el-form-item v-for="(item, index) in structureTittleE" :key="index" :label="structureField[item]" :label-width="contentLabelWidth">
-                  <el-input v-if="structureField[item] != '附件'" v-model="contentform[item]" auto-complete="off"></el-input>
+                  <el-input v-if="(structureField[item] != '附件' && (structureField[item] != '日期' && structureField[item] != '时间'))" v-model="contentform[item]" auto-complete="off"></el-input>
+                  <el-date-picker v-if="(structureField[item] == '日期'|| structureField[item] == '时间')"
+                    v-model="date" value-format="yyyy-MM-dd"
+                    type="date"
+                    placeholder="选择日期">
+                  </el-date-picker>
                   <div v-if="structureField[item] == '附件'">
                     <div class="row">
                         <input id="fileAttach" type="file" name="file"  style="display: none" />
@@ -71,7 +72,7 @@
                 </el-form-item>
               </el-form>
               <div slot="footer" class="dialog-footer">
-                <el-button @click="contentTableVisible = false">取 消</el-button>
+                <el-button @click="closeTableContent">取 消</el-button>
                 <el-button type="primary" @click="addTableContent">确 定</el-button>
               </div>
             </el-dialog>
@@ -139,7 +140,7 @@
                   </li>
                   <li v-for="(con, max) in tableContent" :key="max">
                     <el-tooltip v-for="(item, index) in structureTittleE"  :key="index" effect="dark" :content="structureTittleC[index] != '附件'?con.content[item]: '下载后查看'" placement="bottom">
-                      <b v-if="structureTittleC[index] != '附件'">{{con.content[item]}}</b><b style="color:#409EFF; cursor: pointer;" v-if="structureTittleC[index] == '附件'">下载</b>
+                      <b v-if="structureTittleC[index] != '附件'">{{con.content[item]}}</b><b :class="{'download': con.content[item]}" v-if="structureTittleC[index] == '附件'">{{con.content[item] ? '下载':'无'}}</b>
                     </el-tooltip>
                     <el-tooltip effect="dark" content="修改该条目" placement="bottom">
                       <b class="edit"><i @click="changeTableContent(con._id, con)" class="el-icon-edit"></i></b>
@@ -176,34 +177,34 @@ const querystring = require('querystring');
 export default {
   data () {
     return {
-        tableFormVisible : false,
-        tabIndex : 0,
-        tableList :[],
-        formLabelWidth : '110px',
-        tabTotal : 0,
-        tabCurrentPage : 1,
-        structureId : '',
-        structureAuthorID : '',
-        structureField : {},
-        structureTittleC : [],
-        structureTittleE : [],
-        tableContent : [],
-        tableContentId : '',
-        contentTableVisible : false,
-        updatecontentTableVisible: false,
-        updateStructureTableVisible: false,
-        contentform : {},
-        contentLabelWidth : '110px',
-        currentContentPage : 1,
-        contentPageTotal : 0,
-        selectTableStructure : {},
-        addStructureArr: [],
-        structureForm: {},
-        structureName: '',
-        changeStructureArr: [],
-        changeStructureForm: {},
-        uploadtoken: '',
-        value1: ''
+      tableFormVisible : false,
+      tabIndex : 0,
+      tableList :[],
+      formLabelWidth : '110px',
+      tabTotal : 0,
+      tabCurrentPage : 1,
+      structureId : '',
+      structureAuthorID : '',
+      structureField : {},
+      structureTittleC : [],
+      structureTittleE : [],
+      tableContent : [],
+      tableContentId : '',
+      contentTableVisible : false,
+      updatecontentTableVisible: false,
+      updateStructureTableVisible: false,
+      contentform : {},
+      contentLabelWidth : '110px',
+      currentContentPage : 1,
+      contentPageTotal : 0,
+      selectTableStructure : {},
+      addStructureArr: [],
+      structureForm: {},
+      structureName: '',
+      changeStructureArr: [],
+      changeStructureForm: {},
+      uploadtoken: '',
+      date: ''
     }
   },
   computed:{
@@ -496,8 +497,19 @@ export default {
         });
       });
     },
+    // 关闭添加表内容弹框
+    closeTableContent(){
+      this.contentTableVisible = false;
+      this.contentform = {};
+      this.date = '';
+    },
     // 添加表内容
     addTableContent(){
+      this.structureTittleC.forEach((item, index)=>{
+        if(item == '日期' || item == '时间'){
+          this.contentform[this.structureTittleE[index]] = ''+ this.date;
+        }
+      });
       this.$http({
           url: API.Interface.createTableC(this.token),
           method: 'POST',
@@ -514,7 +526,8 @@ export default {
           })
           this.contentTableVisible = false;
           this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
-          this.contentform = {}
+          this.contentform = {};
+          this.date = '';
         }
       }).catch((error)=>{
         console.log(error)
@@ -737,6 +750,9 @@ export default {
             text-align: center
             border-right: 1px solid #999
             border-bottom: 1px solid #999
+          .download
+            color:#409EFF
+            cursor: pointer
           .edit
             flex: 0 0 50px
             cursor: pointer
