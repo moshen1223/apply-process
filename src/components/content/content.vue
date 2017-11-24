@@ -291,6 +291,17 @@ export default {
               this.structureTittleC.push(this.structureField[title]);
               this.contentform[title] = '';
             }
+          }else if(this.tabIndex != 0){
+              this.structureId = this.tableList[this.tabIndex]._id;
+              this.structureAuthorID = this.tableList[this.tabIndex].author._id;
+              this.selectTableStructure = this.tableList[this.tabIndex];
+              this.structureField = this.tableList[this.tabIndex].structure;
+              this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
+              for (let title in this.structureField) {
+                this.structureTittleE.push(title);
+                this.structureTittleC.push(this.structureField[title]);
+                this.contentform[title] = '';
+              }
           }
         }
       }).catch((error)=>{
@@ -331,7 +342,6 @@ export default {
           this.tableFormVisible = false;
           this.structureName = '';
           this.addStructureArr = [];
-          this.structureForm = {};
           this.getTableStructure(this.tabCurrentPage, PageSize);
         }
       }).catch((error)=>{
@@ -383,20 +393,6 @@ export default {
             this.getTableStructure(this.tabCurrentPage,PageSize)
             this.changeStructureArr = [];
             this.changeStructureForm = {};
-            setTimeout(()=>{
-              if(this.tabIndex != 0){
-                this.structureId = this.tableList[this.tabIndex]._id;
-                this.structureAuthorID = this.tableList[this.tabIndex].author._id;
-                this.selectTableStructure = this.tableList[this.tabIndex];
-                this.structureField = this.tableList[this.tabIndex].structure;
-                this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
-                for (let title in this.structureField) {
-                  this.structureTittleE.push(title);
-                  this.structureTittleC.push(this.structureField[title]);
-                  this.contentform[title] = '';
-                }
-              }
-            },200);
           }
         }).catch((error)=>{
           console.log(error)
@@ -419,21 +415,10 @@ export default {
               message: '删除成功!',
               type: 'success'
           });
+          if(this.tabIndex == this.tableList.length - 1){
+            this.tabIndex = this.tableList.length - 2;
+          }
           this.getTableStructure(this.tabCurrentPage,PageSize);
-          setTimeout(()=>{
-            if(this.tabIndex != 0){
-              this.structureId = this.tableList[this.tabIndex]._id;
-              this.structureAuthorID = this.tableList[this.tabIndex].author._id;
-              this.selectTableStructure = this.tableList[this.tabIndex];
-              this.structureField = this.tableList[this.tabIndex].structure;
-              this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
-              for (let title in this.structureField) {
-                this.structureTittleE.push(title);
-                this.structureTittleC.push(this.structureField[title]);
-                this.contentform[title] = '';
-              }
-            }
-          },200);
         }
       }).catch((error)=>{
         console.log(error)
