@@ -14,13 +14,16 @@
                   </el-form-item>
                   <el-form-item label="添加表结构" :label-width="formLabelWidth">
                     <div class="add-table-title">
-                      <h4><span>表结构名称</span></h4>
+                      <h4><span>结构类型</span><span>结构名称</span></h4>
                       <ul ref="addStructureContent">
                         <li v-for="(item, index) in addStructureArr" :key="index">
+                          <select>
+                            <option value="text">短文本</option>
+                            <option value="textarea">长文本</option>
+                            <option value="date">日期</option>
+                            <option value="accessory">附件</option>
+                          </select>
                           <input type="text"/>
-                        </li>
-                        <li>
-                          <input type="text" value="附件" readonly="true"/>
                         </li>
                       </ul>
                       <div class="add-item" @click="addItem">
@@ -48,14 +51,17 @@
             <div class="addcontent"><el-button @click="showAddTable" type="text">添加表内容</el-button></div>
             <el-dialog title="添加表内容" :visible.sync="contentTableVisible" :show-close="false">
               <el-form :model="contentform">
-                <el-form-item v-for="(item, index) in structureTittleE" :key="index" :label="structureField[item]" :label-width="contentLabelWidth">
-                  <el-input v-if="(structureField[item] != '附件' && (structureField[item] != '日期' && structureField[item] != '时间'))" v-model="contentform[item]" auto-complete="off"></el-input>
-                  <el-date-picker v-if="(structureField[item] == '日期'|| structureField[item] == '时间')"
-                    v-model="date" value-format="yyyy-MM-dd"
+                <el-form-item v-for="(item, index) in structureTittleE" :key="index" :label="structureField[item].value" :label-width="contentLabelWidth">
+                  <el-input v-if="structureField[item].type == 'text'" v-model="contentform[item]" auto-complete="off"></el-input>
+                  <el-input type="textarea" :rows="3" placeholder="请输入内容" 
+                  v-if="structureField[item].type == 'textarea'" 
+                  v-model="contentform[item]" auto-complete="off"></el-input>
+                  <el-date-picker v-if="structureField[item].type == 'date'"
+                    v-model="addDate" value-format="yyyy-MM-dd"
                     type="date"
                     placeholder="选择日期">
                   </el-date-picker>
-                  <div v-if="structureField[item] == '附件'">
+                  <div v-if="structureField[item].type == 'accessory'">
                     <div class="row">
                         <input id="fileAttach" type="file" name="file"  style="display: none" />
                         <button id="btnAttach" type="button" >选择附件</button>
@@ -78,9 +84,17 @@
             </el-dialog>
             <el-dialog title="修改表内容" :visible.sync="updatecontentTableVisible" :show-close="false">
               <el-form :model="contentform">
-                <el-form-item v-for="(item, index) in structureTittleE" :key="index" :label="structureField[item]" :label-width="contentLabelWidth">
-                  <el-input v-if="structureField[item] != '附件'" v-model="contentform[item]" auto-complete="off"></el-input>
-                  <div v-if="structureField[item] == '附件'">
+                <el-form-item v-for="(item, index) in structureTittleE" :key="index" :label="structureField[item].value" :label-width="contentLabelWidth">
+                  <el-input v-if="structureField[item].type == 'text'" v-model="contentform[item]" auto-complete="off"></el-input>
+                  <el-input type="textarea" :rows="3" placeholder="请输入内容" 
+                  v-if="structureField[item].type == 'textarea'" 
+                  v-model="contentform[item]" auto-complete="off"></el-input>
+                  <el-date-picker v-if="structureField[item].type == 'date'"
+                    v-model="changeDate" value-format="yyyy-MM-dd"
+                    type="date"
+                    placeholder="选择日期">
+                  </el-date-picker>
+                  <div v-if="structureField[item].type == 'accessory'">
                     <div class="row">
                         <input id="fileAttachChange" type="file" name="file"  style="display: none" />
                         <button id="btnAttachChange" type="button" >选择附件</button>
@@ -108,9 +122,15 @@
                   </el-form-item>
                   <el-form-item label="表结构" :label-width="formLabelWidth">
                     <div class="change-table-title">
-                      <h4><span>表结构名称</span></h4>
+                      <h4><span>结构类型</span><span>结构名称</span></h4>
                       <ul ref="changeStructureContent">
                         <li v-for="(item, index) in changeStructureArr" :key="index">
+                          <select>
+                            <option value="text">短文本</option>
+                            <option value="textarea">长文本</option>
+                            <option value="date">日期</option>
+                            <option value="accessory">附件</option>
+                          </select>
                           <input type="text"/>
                         </li>
                       </ul>
@@ -139,8 +159,8 @@
                     </el-tooltip>
                   </li>
                   <li v-for="(con, max) in tableContent" :key="max">
-                    <el-tooltip v-for="(item, index) in structureTittleE"  :key="index" effect="dark" :content="structureTittleC[index] != '附件'?con.content[item]: '下载后查看'" placement="bottom">
-                      <b v-if="structureTittleC[index] != '附件'">{{con.content[item]}}</b><b :class="{'download': con.content[item]}" v-if="structureTittleC[index] == '附件'" @click="downloadFile(con.content[item])">{{con.content[item] ? '下载':'无'}}</b>
+                    <el-tooltip v-for="(item, index) in structureTittleE"  :key="index" effect="dark" :content="structureField[item].type != 'accessory' ? con.content[item]: '下载后查看'" placement="bottom">
+                      <b v-if="structureField[item].type != 'accessory'">{{con.content[item]}}</b><b :class="{'download': con.content[item]}" v-if="structureField[item].type == 'accessory'" @click="downloadFile(con.content[item])">{{con.content[item] ? '下载':'无'}}</b>
                     </el-tooltip>
                     <el-tooltip effect="dark" content="修改该条目" placement="bottom">
                       <b class="edit"><i @click="changeTableContent(con._id, con)" class="el-icon-edit"></i></b>
@@ -204,7 +224,8 @@ export default {
       changeStructureArr: [],
       changeStructureForm: {},
       uploadtoken: '',
-      date: ''
+      addDate: '',
+      changeDate: ''
     }
   },
   computed:{
@@ -242,7 +263,7 @@ export default {
         this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
         for (let title in this.structureField) {
           this.structureTittleE.push(title);
-          this.structureTittleC.push(this.structureField[title]);
+          this.structureTittleC.push(this.structureField[title].value);
           this.contentform[title] = ''
         };
         this.selectTableStructure = item;
@@ -251,7 +272,7 @@ export default {
     addItem(){
       this.addStructureArr.push('')
     },
-    // 修改表结构
+    // 修改表结构条目
     changeItem(){
       this.changeStructureArr.push('')
     },
@@ -288,7 +309,7 @@ export default {
             this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
             for (let title in this.structureField) {
               this.structureTittleE.push(title);
-              this.structureTittleC.push(this.structureField[title]);
+              this.structureTittleC.push(this.structureField[title].value);
               this.contentform[title] = '';
             }
           }else if(this.tabIndex != 0){
@@ -299,7 +320,7 @@ export default {
               this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
               for (let title in this.structureField) {
                 this.structureTittleE.push(title);
-                this.structureTittleC.push(this.structureField[title]);
+                this.structureTittleC.push(this.structureField[title].value);
                 this.contentform[title] = '';
               }
           }
@@ -312,10 +333,14 @@ export default {
     setTableStructure(){
       let count = 0;
       for(let i = 0, len = this.$refs['addStructureContent'].children.length; i<len; i++){
-          let val = this.$refs['addStructureContent'].children[i].children[0].value;
+          let type = this.$refs['addStructureContent'].children[i].children[0].value;
+          let val = this.$refs['addStructureContent'].children[i].children[1].value;
+          let obj = {};
+          obj['type'] = type;
+          obj['value'] = val;
           if(val){
             count += 1;
-            this.structureForm[`th${count}`] = val;
+            this.structureForm[`th${count}`] = obj;
           }
       };
       if(this.structureName == ''){
@@ -359,7 +384,8 @@ export default {
       setTimeout(()=>{
         for(let i=0 ,len = this.$refs['changeStructureContent'].children.length; i<len; i++){
           for(let key in this.changeStructureArr[i]){
-            this.$refs['changeStructureContent'].children[i].children[0].value = this.changeStructureArr[i][key];
+            this.$refs['changeStructureContent'].children[i].children[0].value = this.changeStructureArr[i][key].type;
+            this.$refs['changeStructureContent'].children[i].children[1].value = this.changeStructureArr[i][key].value;
           }
         }
       },200);
@@ -368,10 +394,14 @@ export default {
     updateTableStructure(){
       let count = 0;
       for(let i=0 ,len = this.$refs['changeStructureContent'].children.length; i<len; i++){
-        let val = this.$refs['changeStructureContent'].children[i].children[0].value;
+        let type = this.$refs['changeStructureContent'].children[i].children[0].value;
+        let val = this.$refs['changeStructureContent'].children[i].children[1].value;
+        let obj = {};
+        obj['type'] = type;
+        obj['value'] = val;
         if(val){
           count += 1;
-          this.changeStructureForm[`th${count}`] = val;
+          this.changeStructureForm[`th${count}`] = obj;
         }
       }
       if(Object.getOwnPropertyNames(this.changeStructureForm).length>0){
@@ -390,7 +420,8 @@ export default {
               message: '修改成功!',
               type: 'success'
             });
-            this.getTableStructure(this.tabCurrentPage,PageSize)
+            this.selectTableStructure.structure_name = '';
+            this.getTableStructure(this.tabCurrentPage,PageSize);
             this.changeStructureArr = [];
             this.changeStructureForm = {};
           }
@@ -427,6 +458,7 @@ export default {
     // 关闭更新表结构弹框
     closeUpdateTableStructure(){
       this.updateStructureTableVisible = false;
+      this.structureName = '';
       this.changeStructureArr = [];
       this.changeStructureForm = {};
     },
@@ -468,11 +500,11 @@ export default {
             },
             done: function (data) {
                 $('#Attachbar').text('100%');
-                that.structureTittleC.forEach((item,index)=>{
-                  if(item == "附件"){
-                    that.contentform[that.structureTittleE[index]] = '' + data.result.ResourceID;
+                for(let item in that.structureField){
+                  if(that.structureField[item].type == "accessory"){
+                    that.contentform[item] = '' + data.result.ResourceID;
                   }
-                })
+                }
             },
             progress: function (data) {
                 //执行回调
@@ -486,15 +518,15 @@ export default {
     closeTableContent(){
       this.contentTableVisible = false;
       this.contentform = {};
-      this.date = '';
+      this.addDate = '';
     },
     // 添加表内容
     addTableContent(){
-      this.structureTittleC.forEach((item, index)=>{
-        if(item == '日期' || item == '时间'){
-          this.contentform[this.structureTittleE[index]] = ''+ this.date;
+      for(let item in this.structureField){
+        if(this.structureField[item].type == "date"){
+          this.contentform[item] = this.addDate;
         }
-      });
+      }
       this.$http({
           url: API.Interface.createTableC(this.token),
           method: 'POST',
@@ -512,7 +544,10 @@ export default {
           this.contentTableVisible = false;
           this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
           this.contentform = {};
-          this.date = '';
+          this.addDate = '';
+          $('#AttachFilename').val('');
+          $('#Attachbar').text('根据需要，选择是否上传');
+          
         }
       }).catch((error)=>{
         console.log(error)
@@ -522,12 +557,18 @@ export default {
     closeUpdateTableContent(){
         this.updatecontentTableVisible = false;
         this.contentform = {};
+        this.changeDate = '';
     },
     // 改变表内容
     changeTableContent(id, con){
       this.tableContentId = id;
-      this.updatecontentTableVisible = true;
       this.contentform = con.content;
+      this.updatecontentTableVisible = true;
+      for(let item in this.structureField){
+        if(this.structureField[item].type == "date"){
+          this.changeDate = this.contentform[item];
+        }
+      }
       let that = this;
       this.$nextTick(()=>{
         $('#btnAttachChange').on('click',function () {
@@ -542,22 +583,27 @@ export default {
             },
             done: function (data) {
                 $('#AttachbarChange').text('100%');
-                that.structureTittleC.forEach((item,index)=>{
-                  if(item == "附件"){
-                    that.contentform[that.structureTittleE[index]] = '' + data.result.ResourceID;
+                for(let item in that.structureField){
+                  if(that.structureField[item].type == "accessory"){
+                    that.contentform[item] = '' + data.result.ResourceID;
                   }
-                })
+                }
             },
             progress: function (data) {
                 //执行回调
                 var percentVal = Math.round((data.loaded * 100) / data.total).toFixed(2) + '%';
-                $('#Attachbar').text(percentVal);
+                $('#AttachbarChange').text(percentVal);
             }
         });
       });
     },
     // 实际修改表内容
     updateTableContent(){
+      for(let item in this.structureField){
+        if(this.structureField[item].type == "date"){
+          this.contentform[item] = this.changeDate;
+        }
+      }
       this.$http({
         url: API.Interface.updateTableC(this.token),
         method: 'POST',
@@ -574,7 +620,10 @@ export default {
           })
           this.updatecontentTableVisible = false;
           this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
-          this.contentform = {}
+          this.contentform = {};
+          this.changeDate = '';
+          $('#AttachFilenameChange').val('');
+          $('#AttachbarChange').text('根据需要，选择是否重新上传');
         }
       }).catch((error)=>{
         console.log(error)
@@ -639,23 +688,32 @@ export default {
       border: 1px solid #d8dce5
       border-radius: 4px
       h4
+        display: flex
         span
-          display: inline-block
-          width: 100%
+          flex: 1
           text-align: center
           line-height: 30px
+          border-right: 1px solid #d8dce5
+          &:last-child
+            border-right: none
       ul
         li
           display: flex
           border-top: 1px solid #d8dce5
           font-size:0
-          input
+          height: 30px
+          select
             flex: 1
-            height: 30px
+            border: none
+            background: #fff
             outline: none
             font-size: 14px
-            width: 100%
+          input
+            flex: 1
+            outline: none
+            font-size: 14px
             text-align: center
+            border-left: 1px solid #d8dce5
             -webkit-box-sizing: border-box
             -moz-box-sizing: border-box
             -o-box-sizing: border-box
@@ -684,23 +742,32 @@ export default {
       border: 1px solid #d8dce5
       border-radius: 4px
       h4
+        display: flex
         span
+          flex: 1
           text-align: center
           line-height: 30px
-          width: 100%
-          display: inline-block
+          border-right: 1px solid #d8dce5
+          &:last-child
+            border-right: none
       ul
         li
           display: flex
           border-top: 1px solid #d8dce5
           font-size:0
-          input
+          height: 30px
+          select
             flex: 1
-            height: 30px
+            border: none
+            background: #fff
             outline: none
             font-size: 14px
-            width: 100%
+          input
+            flex: 1
+            outline: none
+            font-size: 14px
             text-align: center
+            border-left: 1px solid #d8dce5
             -webkit-box-sizing: border-box
             -moz-box-sizing: border-box
             -o-box-sizing: border-box
