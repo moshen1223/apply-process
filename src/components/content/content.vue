@@ -140,7 +140,7 @@
                   </li>
                   <li v-for="(con, max) in tableContent" :key="max">
                     <el-tooltip v-for="(item, index) in structureTittleE"  :key="index" effect="dark" :content="structureTittleC[index] != '附件'?con.content[item]: '下载后查看'" placement="bottom">
-                      <b v-if="structureTittleC[index] != '附件'">{{con.content[item]}}</b><b :class="{'download': con.content[item]}" v-if="structureTittleC[index] == '附件'">{{con.content[item] ? '下载':'无'}}</b>
+                      <b v-if="structureTittleC[index] != '附件'">{{con.content[item]}}</b><b :class="{'download': con.content[item]}" v-if="structureTittleC[index] == '附件'" @click="downloadFile(con.content[item])">{{con.content[item] ? '下载':'无'}}</b>
                     </el-tooltip>
                     <el-tooltip effect="dark" content="修改该条目" placement="bottom">
                       <b class="edit"><i @click="changeTableContent(con._id, con)" class="el-icon-edit"></i></b>
@@ -596,6 +596,12 @@ export default {
       }).catch((error)=>{
         console.log(error);
       })
+    },
+    // 下载文件
+    downloadFile(id){
+      if(id){
+        window.location.href = `http://cms.izhixue.cn/FileManage/DownLoad?resourceID=${id}`;
+      }
     }
   }
 }
