@@ -658,16 +658,23 @@ export default {
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
 .content
-  overflow: hidden
-  height: 100%
+  padding: 20px 12px 20px 12px
+  -webkit-box-sizing: border-box
+  -moz-box-sizing: border-box
+  -o-box-sizing: border-box
+  box-sizing: border-box
+  position: absolute
+  top: 50px
+  bottom: 0
+  left: 0
+  right: 0
   .tab
-    width: 200px
+    width: 180px
     background: #fff
-    float: left
     height: 100%
+    float: left
     position: relative
     overflow-y: auto
-    padding-bottom: 24px 
     -webkit-box-sizing: border-box
     -moz-box-sizing: border-box
     -o-box-sizing: border-box
@@ -728,10 +735,10 @@ export default {
       background: #fafafa
     .pages
       position: fixed
-      bottom: 22px
+      bottom: 20px
       left: 10px
   .detail
-    margin-left: 220px
+    margin-left: 200px
     p   
       font-size: 14px
       color: #666

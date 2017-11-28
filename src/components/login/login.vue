@@ -69,6 +69,7 @@ export default {
                 type: 'success'
               });
               this.changeLoginShow(false);
+              Utils.saveToStorage('userEmail', this.Lemail);
               Utils.saveToStorage('userId', res.data.userId);
             }else if(res.data.code == 10003){
               this.$message.error('找不到用户!');
@@ -100,7 +101,8 @@ export default {
             message: '恭喜你，注册成功!',
             type: 'success'
           });
-          Utils.saveToStorage('userId', res.data.userId)
+          Utils.saveToStorage('userEmail', this.Remail);
+          Utils.saveToStorage('userId', res.data.userId);
           this.changeLoginShow(false);
         }else if(res.data.code == 10008){
           this.$message.error('用户已存在!');

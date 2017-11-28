@@ -1,5 +1,19 @@
 <template>
   <div class="container">
+    <div class="header">
+      <div class="logo">项目申报管理</div>
+      <div class="user">
+        <div class="user-handle">
+          <div class="user-name" @mouseenter="showQuit" @mouseleave="hideQuit">
+            <span>{{userName ? userName : '用户名'}}</span>
+            <i class="el-icon-caret-bottom"></i>
+          </div>
+          <div class="user-quit" v-show="quitShow" @mouseenter="clearTimer" @mouseleave="hideQuit">
+            <span @click="quitSystem">退出登录</span>
+          </div>
+        </div>
+      </div>
+    </div>
     <router-view></router-view>
     <login v-show="loginStatus"></login>
   </div>
@@ -17,15 +31,19 @@ const timeStr = Math.round(new Date().getTime() / 1000);
 export default {
   data(){
     return {
+      quitShow: false,
+      timer: '',
+      userName: ''
     }
   },
   computed: {
     ...mapGetters([
-      'loginStatus'
+      'loginStatus',
     ])
   },
   mounted(){
     this.getToken();
+    this.getUserName();
   },
   methods:{
     getToken(){
@@ -39,30 +57,114 @@ export default {
           }
         }).then((res)=>{
             if(res.data.code == 0){
-              Utils.saveToStorage('token', res.data.token)
+              Utils.saveToStorage('token', res.data.token);
             }
         }).catch((error) => {
             console.log(error);
         });
-    }
+    },
+    showQuit(){
+      this.quitShow = true;
+    },
+    hideQuit(){
+      this.timer = setTimeout(()=>{
+        this.quitShow = false;
+      },500)
+    },
+    clearTimer(){
+      clearTimeout(this.timer)
+    },
+    quitSystem(){
+      this.changeLoginShow(true);
+      Utils.saveToStorage('userEmail', '');
+      Utils.saveToStorage('userId', '');
+    },
+    getUserName(){
+      if(Utils.getFromStorage('userEmail')){
+        this.userName = (Utils.getFromStorage('userEmail')).split('@')[0]
+      }
+    },
+    ...mapMutations({
+      changeLoginShow: 'SET_LOGIN'
+    })
   },
   components:{
     Login
+  },
+  watch:{
+    loginStatus(){
+      this.getUserName();
+    }
   }
 }
 </script>
 
 <style>
 .container{
-  padding: 20px 12px 20px 12px;
-  background: #f1f2f7;
+  background: #f5f5f6;
   position: relative;
   height: 100%;
-  overflow: hidden;
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   -o-box-sizing: border-box;
   box-sizing: border-box;
+}
+.container .header{
+  height: 50px;
+  line-height: 50px;
+  background: #373d41;
+  padding-left: 22px;
+  padding-right: 22px;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -o-box-sizing: border-box;
+  box-sizing: border-box;
+  display: flex;
+}
+.container .header .logo{
+  flex: 1;
+  font-size: 14px;
+  color: #fff;
+}
+.container .header .user{
+  flex: 0 0 120px;
+  text-align: center;
+  color: #fff;
+}
+.container .header 
+.user .user-handle{
+  cursor: pointer;
+  position: relative;
+}
+.container .header 
+.user .user-name:hover{
+  background: #2b2f32;
+}
+.container .header 
+.user .user-handle
+.user-quit{
+  position: absolute;
+  top: 100%;
+  right: 0px;
+  width: 150px;
+  background: #fff;
+  z-index: 100;
+}
+.container .header 
+.user .user-handle
+.user-quit span{
+  height: 50px;
+  line-height: 50px;
+  display: block;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: center;
+  color: #333;
+}
+.container .header 
+.user .user-handle
+.user-quit span:hover{
+  color:#999;
 }
 .el-table th, .el-table td{
   padding: 0;
