@@ -185,6 +185,9 @@ export default {
 }
 .el-date-editor.el-input, 
 .el-date-editor.el-input__inner{
-  width: 100%
+  width: 100%;
+}
+.el-pager li.active{
+  color: #00c1de;
 }
 </style>

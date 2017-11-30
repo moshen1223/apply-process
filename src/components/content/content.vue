@@ -1,8 +1,8 @@
 <template>
     <div class="content">
         <div class="tab">
-            <div class="tab-item">
-                <el-button type="text" @click="tableFormVisible = true">创建新的表结构</el-button>
+            <div class="add-item">
+                <div @click="tableFormVisible = true">创建表结构</div>
             </div>
             <div class="tab-item" v-for="(item,index) in tableList" :key="index" @click="selectTable(index,item)" :class="{'actived' : index == tabIndex }">
                 <span class="tab-link">{{item.structure_name}}</span>
@@ -14,7 +14,7 @@
                   </el-form-item>
                   <el-form-item label="添加表结构" :label-width="formLabelWidth">
                     <div class="add-table-title">
-                      <h4><span>结构类型</span><span>结构名称</span></h4>
+                      <h4><span>选择类型</span><span>结构名称</span></h4>
                       <ul ref="addStructureContent">
                         <li v-for="(item, index) in addStructureArr" :key="index">
                           <select>
@@ -48,7 +48,7 @@
             </div>
         </div>
         <div class="detail">
-            <div class="addcontent"><el-button @click="showAddTable" type="text">添加表内容</el-button></div>
+            <div class="addcontent"><span @click="showAddTable">添加表内容</span></div>
             <el-dialog title="添加表内容" :visible.sync="contentTableVisible" :show-close="false">
               <el-form :model="contentform">
                 <el-form-item v-for="(item, index) in structureTittleE" :key="index" :label="structureField[item].value" :label-width="contentLabelWidth">
@@ -679,6 +679,24 @@ export default {
     -moz-box-sizing: border-box
     -o-box-sizing: border-box
     box-sizing: border-box
+    .add-item
+      height: 43px
+      border-bottom: 1px solid #f1f2f7
+      text-align: center
+      line-height: 43px
+      div
+        display: inline-block
+        height: 26px
+        line-height: 24px
+        border: 1px solid #00c1de
+        display: inline-block
+        padding: 0 16px
+        cursor: pointer
+        font-size: 12px
+        color: #00c1de
+        &:hover
+          background: #00c1de
+          color: #fff
     .tab-item
       height: 43px
       padding-left: 10px
@@ -745,6 +763,19 @@ export default {
       line-height: 20px
     .addcontent
       margin-top: 10px
+      span
+        display: inline-block
+        height: 26px
+        line-height: 24px
+        border: 1px solid #00c1de
+        display: inline-block
+        padding: 0 16px
+        cursor: pointer
+        font-size: 12px
+        color: #00c1de
+        &:hover
+          background: #00c1de
+          color: #fff
     .change-table-title
       border: 1px solid #d8dce5
       border-radius: 4px
@@ -816,7 +847,7 @@ export default {
             border-right: 1px solid #999
             border-bottom: 1px solid #999
           .download
-            color:#409EFF
+            color: #00c1de
             cursor: pointer
           .edit
             flex: 0 0 50px
