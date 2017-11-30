@@ -62,18 +62,14 @@
                     placeholder="选择日期">
                   </el-date-picker>
                   <div v-if="structureField[item].type == 'accessory'">
-                    <div class="row">
-                        <input id="fileAttach" type="file" name="file"  style="display: none" />
-                        <button id="btnAttach" type="button" >选择附件</button>
-                        <input id="AttachFilename" readonly="true" type="text"/>
-                    </div>
-                    <div class="row">
-                        <div class="progress">
-                            <div id="Attachbar">
-                                根据需要，选择是否上传
-                            </div>
-                        </div>
-                    </div>
+                    <el-upload
+                      class="upload-demo"
+                      :action="'http://cms.izhixue.cn/FileManagement/GetUploadUrl?id=' + fileName + '&ssotoken=' + uploadtoken"
+                      :on-change="handleChange"
+                      :file-list="fileList">
+                      <el-button size="small" type="primary">点击上传</el-button>
+                      <div slot="tip" class="el-upload__tip">根据需要，选择是否上传,支持多个</div>
+                    </el-upload>
                   </div>
                 </el-form-item>
               </el-form>
@@ -95,18 +91,14 @@
                     placeholder="选择日期">
                   </el-date-picker>
                   <div v-if="structureField[item].type == 'accessory'">
-                    <div class="row">
-                        <input id="fileAttachChange" type="file" name="file"  style="display: none" />
-                        <button id="btnAttachChange" type="button" >选择附件</button>
-                        <input id="AttachFilenameChange" readonly="true" type="text"/>
-                    </div>
-                    <div class="row">
-                        <div class="progress">
-                            <div id="AttachbarChange">
-                                根据需要，选择是否重新上传
-                            </div>
-                        </div>
-                    </div>
+                    <el-upload
+                      class="upload-demo"
+                      :action="'http://cms.izhixue.cn/FileManagement/GetUploadUrl?id=' + updatefileName + '&ssotoken=' + uploadtoken"
+                      :on-change="updatehandleChange"
+                      :file-list="updatefileList">
+                      <el-button size="small" type="primary">点击上传</el-button>
+                      <div slot="tip" class="el-upload__tip">根据需要，选择是否上传,支持多个</div>
+                    </el-upload>
                   </div>
                 </el-form-item>
               </el-form>
@@ -229,7 +221,13 @@ export default {
       changeDate: '',
       editable:true,
       isDragging: false,
-      delayedDragging: false
+      delayedDragging: false,
+      fileList: [],
+      fileName: '',
+      fileids: '',
+      updatefileList: [],
+      updatefileName: '',
+      updatefileids: ''
     }
   },
   computed:{
@@ -250,6 +248,26 @@ export default {
     this.getuploadToken();
   },
   methods:{
+    // 添加时的图片上传
+    handleChange(file, fileList) {
+        this.fileName = file.name;
+        this.fileList = fileList.slice(-3);
+        let idStr = '';
+        for(let i = 0; i< this.fileList.length; i++){
+          idStr += `,${this.fileList[i].uid}`
+        }
+        this.fileids = idStr.substring(1);
+    },
+    // 更新时的图片上传
+    updatehandleChange(file, fileList) {
+        this.updatefileName = file.name;
+        this.updatefileList = fileList.slice(-3);
+        let idStr = '';
+        for(let i = 0; i< this.updatefileList.length; i++){
+          idStr += `,${this.updatefileList[i].uid}`
+        }
+        this.updatefileids = idStr.substring(1);
+    },
     // 拖拽改变位置
     onMove ({relatedContext, draggedContext}) {
       const relatedElement = relatedContext.element;
@@ -262,7 +280,7 @@ export default {
         url: API.Interface.getuploadToken('sizhiqian@izhixue.cn','JQmvuu4y1fnSd'),
         method: 'GET'
       }).then((res)=>{
-        this.uploadtoken = res.data;
+        this.uploadtoken = res.data
       }).catch((error)=>{
         console.log(error)
       })
@@ -503,46 +521,24 @@ export default {
     // 显示表内容弹框
     showAddTable(){
       this.contentTableVisible = true;
-      let that = this;
-      //选择文件
-      this.$nextTick(()=>{
-        $('#btnAttach').on('click',function () {
-            $('#fileAttach').click();
-        })
-        //执行上传
-        $('#fileAttach').hexUpload({
-            cms: 'http://cms.izhixue.cn/',
-            token: that.uploadtoken,
-            add: function (data) {
-                $('#AttachFilename').val(data.files[0].name);
-            },
-            done: function (data) {
-                $('#Attachbar').text('100%');
-                for(let item in that.structureField){
-                  if(that.structureField[item].type == "accessory"){
-                    that.contentform[item] = '' + data.result.ResourceID;
-                  }
-                }
-            },
-            progress: function (data) {
-                //执行回调
-                var percentVal = Math.round((data.loaded * 100) / data.total).toFixed(2) + '%';
-                $('#Attachbar').text(percentVal);
-            }
-        });
-      });
     },
     // 关闭添加表内容弹框
     closeTableContent(){
       this.contentTableVisible = false;
       this.contentform = {};
       this.addDate = '';
+      this.fileList = [];
+      this.fileName = '';
+      this.fileids = '';
     },
     // 添加表内容
     addTableContent(){
       for(let item in this.structureField){
         if(this.structureField[item].type == "date"){
           this.contentform[item] = this.addDate;
+        }
+        if(this.structureField[item].type == "accessory"){
+          this.contentform[item] = this.fileids;
         }
       }
       this.$http({
@@ -563,9 +559,9 @@ export default {
           this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
           this.contentform = {};
           this.addDate = '';
-          $('#AttachFilename').val('');
-          $('#Attachbar').text('根据需要，选择是否上传');
-          
+          this.fileList = [];
+          this.fileName = '';
+          this.fileids = '';
         }
       }).catch((error)=>{
         console.log(error)
@@ -576,6 +572,9 @@ export default {
         this.updatecontentTableVisible = false;
         this.contentform = {};
         this.changeDate = '';
+        this.updatefileList = [];
+        this.updatefileName = '';
+        this.updatefileids = '';
     },
     // 改变表内容
     changeTableContent(id, con){
@@ -587,39 +586,17 @@ export default {
           this.changeDate = this.contentform[item];
         }
       }
-      let that = this;
-      this.$nextTick(()=>{
-        $('#btnAttachChange').on('click',function () {
-            $('#fileAttachChange').click();
-        })
-        //执行上传
-        $('#fileAttachChange').hexUpload({
-            cms: 'http://cms.izhixue.cn/',
-            token: that.uploadtoken,
-            add: function (data) {
-                $('#AttachFilenameChange').val(data.files[0].name);
-            },
-            done: function (data) {
-                $('#AttachbarChange').text('100%');
-                for(let item in that.structureField){
-                  if(that.structureField[item].type == "accessory"){
-                    that.contentform[item] = '' + data.result.ResourceID;
-                  }
-                }
-            },
-            progress: function (data) {
-                //执行回调
-                var percentVal = Math.round((data.loaded * 100) / data.total).toFixed(2) + '%';
-                $('#AttachbarChange').text(percentVal);
-            }
-        });
-      });
     },
     // 实际修改表内容
     updateTableContent(){
       for(let item in this.structureField){
         if(this.structureField[item].type == "date"){
           this.contentform[item] = this.changeDate;
+        }
+        if(this.structureField[item].type == "accessory"){
+          if(this.updatefileids){
+            this.contentform[item] = this.updatefileids;
+          }
         }
       }
       this.$http({
@@ -640,8 +617,9 @@ export default {
           this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
           this.contentform = {};
           this.changeDate = '';
-          $('#AttachFilenameChange').val('');
-          $('#AttachbarChange').text('根据需要，选择是否重新上传');
+          this.updatefileList = [];
+          this.updatefileName = '';
+          this.updatefileids = '';
         }
       }).catch((error)=>{
         console.log(error)
@@ -667,7 +645,11 @@ export default {
     // 下载文件
     downloadFile(id){
       if(id){
-        window.location.href = `http://cms.izhixue.cn/FileManage/DownLoad?resourceID=${id}`;
+        let arr = [];
+        arr = id.split(',');
+        for (let i = 0; i < arr.length; i++) {
+          window.location.href = `http://cms.izhixue.cn/FileManage/DownLoad?resourceID=${arr[i]}`;
+        }
       }
     }
   },
