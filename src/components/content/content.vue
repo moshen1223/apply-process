@@ -13,10 +13,10 @@
                   <el-input v-model="structureName" auto-complete="off"></el-input>
                   </el-form-item>
                   <el-form-item label="添加表结构" :label-width="formLabelWidth">
-                    <div class="add-table-title">
+                    <div class="add-table-title" ref="addStructureContent">
                       <h4><span>选择类型</span><span>结构名称</span></h4>
-                      <ul ref="addStructureContent">
-                        <li v-for="(item, index) in addStructureArr" :key="index">
+                      <draggable element="ul" v-model="addStructureArr" :options="dragOptions" :move="onMove" @start="isDragging=true" @end="isDragging=false">
+                        <li v-for="item in addStructureArr" :key="item.timestr" >
                           <select>
                             <option value="text">短文本</option>
                             <option value="textarea">长文本</option>
@@ -25,7 +25,7 @@
                           </select>
                           <input type="text"/>
                         </li>
-                      </ul>
+                      </draggable>
                       <div class="add-item" @click="addItem">
                         <i class="el-icon-plus"></i>
                       </div>
@@ -187,6 +187,7 @@
 </template>
 
 <script>
+import draggable from 'vuedraggable'
 import Utils from 'common/js/utils'
 import API from 'api/api'
 
@@ -225,10 +226,18 @@ export default {
       changeStructureForm: {},
       uploadtoken: '',
       addDate: '',
-      changeDate: ''
+      changeDate: '',
+      editable:true,
+      isDragging: false,
+      delayedDragging: false
     }
   },
   computed:{
+    dragOptions () {
+      return  {
+        disabled: !this.editable
+      };
+    },
     token(){
       return Utils.getFromStorage('token')
     },
@@ -241,6 +250,12 @@ export default {
     this.getuploadToken();
   },
   methods:{
+    // 拖拽改变位置
+    onMove ({relatedContext, draggedContext}) {
+      const relatedElement = relatedContext.element;
+      const draggedElement = draggedContext.element;
+      return (!relatedElement || !relatedElement.fixed) && !draggedElement.fixed
+    },
     // 获取上传时的token
     getuploadToken(){
       this.$http({
@@ -270,7 +285,10 @@ export default {
     },
     // 添加表结构条目
     addItem(){
-      this.addStructureArr.push('')
+      this.addStructureArr.push({
+          timestr: Math.random(), 
+          fixed: false
+      })
     },
     // 修改表结构条目
     changeItem(){
@@ -332,9 +350,9 @@ export default {
     // 添加表结构
     setTableStructure(){
       let count = 0;
-      for(let i = 0, len = this.$refs['addStructureContent'].children.length; i<len; i++){
-          let type = this.$refs['addStructureContent'].children[i].children[0].value;
-          let val = this.$refs['addStructureContent'].children[i].children[1].value;
+      for(let i = 0, len = this.$refs['addStructureContent'].children[1].children.length; i<len; i++){
+          let type = this.$refs['addStructureContent'].children[1].children[i].children[0].value;
+          let val = this.$refs['addStructureContent'].children[1].children[i].children[1].value;
           let obj = {};
           obj['type'] = type;
           obj['value'] = val;
@@ -651,6 +669,20 @@ export default {
       if(id){
         window.location.href = `http://cms.izhixue.cn/FileManage/DownLoad?resourceID=${id}`;
       }
+    }
+  },
+  components: {
+    draggable,
+  },
+  watch:{
+    isDragging (newValue) {
+      if (newValue){
+        this.delayedDragging= true
+        return
+      }
+      this.$nextTick( () =>{
+           this.delayedDragging =false
+      })
     }
   }
 }
