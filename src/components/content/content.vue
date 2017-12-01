@@ -68,7 +68,7 @@
                       :on-change="handleChange"
                       :file-list="fileList">
                       <el-button size="small" type="primary">点击上传</el-button>
-                      <div slot="tip" class="el-upload__tip">根据需要，选择是否上传,支持多个</div>
+                      <div slot="tip" class="el-upload__tip">根据需要选择上传,支持多个</div>
                     </el-upload>
                   </div>
                 </el-form-item>
@@ -97,7 +97,7 @@
                       :on-change="updatehandleChange"
                       :file-list="updatefileList">
                       <el-button size="small" type="primary">点击上传</el-button>
-                      <div slot="tip" class="el-upload__tip">根据需要，选择是否上传,支持多个</div>
+                      <div slot="tip" class="el-upload__tip">根据需要上传,支持上传多个</div>
                     </el-upload>
                   </div>
                 </el-form-item>

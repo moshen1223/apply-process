@@ -1,4 +1,5 @@
 <template>
+  <transition name="fade">
     <div class="login-register">
       <div class="card-content">
         <div class="card-title"><span @click="selectType(1)" :class="selected == 1 ? 'checked' : ''">登录</span><span @click="selectType(2)" :class="selected == 2 ? 'checked' : ''">注册</span></div>
@@ -20,6 +21,7 @@
         </div>
       </div>
     </div>
+  </transition>
 </template>
 
 <script>
@@ -71,6 +73,8 @@ export default {
               this.changeLoginShow(false);
               Utils.saveToStorage('userEmail', this.Lemail);
               Utils.saveToStorage('userId', res.data.userId);
+              this.Lemail = '';
+              this.Lpassword = ''; 
             }else if(res.data.code == 10003){
               this.$message.error('找不到用户!');
             }else if(res.data.code == 10007){
@@ -104,6 +108,8 @@ export default {
           Utils.saveToStorage('userEmail', this.Remail);
           Utils.saveToStorage('userId', res.data.userId);
           this.changeLoginShow(false);
+          this.Remail = '';
+          this.Rpassword = '';
         }else if(res.data.code == 10008){
           this.$message.error('用户已存在!');
         }
@@ -126,8 +132,8 @@ export default {
   bottom: 0
   width: 100%
   z-index: 999
-  background: #e1e1e1
-  background-size: auto
+  background: url('./login-bg.jpg') no-repeat;
+  background-size: auto;
   display: flex
   justify-content: center
   align-items: center
@@ -161,4 +167,8 @@ export default {
       .btn
         letter-spacing: 1px
         font-size: 13px
+.fade-enter-active, .fade-leave-active
+  transition: opacity 1s
+.fade-enter, .fade-leave-active
+  opacity: 0
 </style>
