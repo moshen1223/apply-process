@@ -2,7 +2,7 @@
     <div class="content">
         <div class="tab">
             <div class="add-item">
-                <div @click="tableFormVisible = true">创建表结构</div>
+                <div class="self-button" @click="tableFormVisible = true">创建表结构</div>
             </div>
             <div class="tab-item" v-for="(item,index) in tableList" :key="index" @click="selectTable(index,item)" :class="{'actived' : index == tabIndex }">
                 <span class="tab-link">{{item.structure_name}}</span>
@@ -31,6 +31,7 @@
                       </div>
                     </div>
                   </el-form-item>
+                  <p class="tips">注: 可按照需要拖拽改变结构顺序。</p>
               </el-form>
               <div slot="footer" class="dialog-footer">
                   <el-button @click="closeTableStructure">取 消</el-button>
@@ -38,7 +39,7 @@
               </div>
             </el-dialog>
             <div class="pages">
-            <el-pagination
+            <el-pagination  v-show="pageShow"
                 small
                 layout="prev, pager, next"
                 @current-change="handleCurrentChange"
@@ -48,7 +49,7 @@
             </div>
         </div>
         <div class="detail">
-            <div class="addcontent"><span @click="showAddTable">添加表内容</span></div>
+            <div class="addcontent"><span class="self-button" @click="showAddTable">添加表内容</span></div>
             <el-dialog title="添加表内容" :visible.sync="contentTableVisible" :show-close="false">
               <el-form :model="contentform">
                 <el-form-item v-for="(item, index) in structureTittleE" :key="index" :label="structureField[item].value" :label-width="contentLabelWidth">
@@ -62,14 +63,16 @@
                     placeholder="选择日期">
                   </el-date-picker>
                   <div v-if="structureField[item].type == 'accessory'">
-                    <el-upload
-                      class="upload-demo"
-                      :action="'http://cms.izhixue.cn/FileManagement/GetUploadUrl?id=' + fileName + '&ssotoken=' + uploadtoken"
-                      :on-change="handleChange"
-                      :file-list="fileList">
-                      <el-button size="small" type="primary">点击上传</el-button>
-                      <div slot="tip" class="el-upload__tip">根据需要选择上传,支持多个</div>
-                    </el-upload>
+                    <div class="upload">
+                        <input id="fileAttach" type="file" name="file"  style="display: none" />
+                        <span class="upload-button" @click="btnAttach" type="button" >选择附件</span>
+                        <b id="process"></b>
+                    </div>
+                    <ul class="fileList">
+                      <li v-for="(item, index) in uploadfileList" :key="index">
+                        <span>{{item.FileName}}</span><i @click="deleteFile(index)" class="el-icon-delete"></i>
+                      </li>
+                    </ul>
                   </div>
                 </el-form-item>
               </el-form>
@@ -91,14 +94,16 @@
                     placeholder="选择日期">
                   </el-date-picker>
                   <div v-if="structureField[item].type == 'accessory'">
-                    <el-upload
-                      class="upload-demo"
-                      :action="'http://cms.izhixue.cn/FileManagement/GetUploadUrl?id=' + updatefileName + '&ssotoken=' + uploadtoken"
-                      :on-change="updatehandleChange"
-                      :file-list="updatefileList">
-                      <el-button size="small" type="primary">点击上传</el-button>
-                      <div slot="tip" class="el-upload__tip">根据需要上传,支持上传多个</div>
-                    </el-upload>
+                    <div class="upload">
+                        <input id="updateFileAttach" type="file" name="file"  style="display: none" />
+                        <span class="upload-button" @click="updateBtnAttach" type="button" >选择附件</span>
+                        <b id="updateProcess"></b>
+                    </div>
+                    <ul class="fileList">
+                      <li v-for="(item, index) in updateFileList" :key="index">
+                        <span>{{item.FileName}}</span><i @click="updateDeleteFile(index)" class="el-icon-delete"></i>
+                      </li>
+                    </ul>
                   </div>
                 </el-form-item>
               </el-form>
@@ -140,24 +145,28 @@
             <div class="table">
                 <ul>
                   <li>
-                    <el-tooltip v-for="(item, index) in structureTittleC" :key="index" effect="dark" :content="item" placement="bottom">
+                    <el-tooltip v-for="(item, index) in structureTittleC" :key="index"  :open-delay = "openDelay" effect="light" :content="item" placement="bottom">
                       <b>{{item}}</b>
                     </el-tooltip>
-                    <el-tooltip effect="dark" content="修改表结构" placement="bottom">
+                    <el-tooltip effect="light" :open-delay = "openDelay" content="修改表结构" placement="bottom">
                       <b @click="changeTableStructure()" class="edit"><i class="el-icon-edit"></i></b>
                     </el-tooltip>
-                    <el-tooltip effect="dark" content="删除该表" placement="bottom">
+                    <el-tooltip effect="light"  :open-delay = "openDelay" content="删除该表" placement="bottom">
                       <b @click="delTableStructure()" class="edit"><i class="el-icon-delete"></i></b>
                     </el-tooltip>
                   </li>
                   <li v-for="(con, max) in tableContent" :key="max">
-                    <el-tooltip v-for="(item, index) in structureTittleE"  :key="index" effect="dark" :content="structureField[item].type != 'accessory' ? con.content[item]: '下载后查看'" placement="bottom">
-                      <b v-if="structureField[item].type != 'accessory'">{{con.content[item]}}</b><b :class="{'download': con.content[item]}" v-if="structureField[item].type == 'accessory'" @click="downloadFile(con.content[item])">{{con.content[item] ? '下载':'无'}}</b>
+                    <el-tooltip v-for="(item, index) in structureTittleE"  :open-delay = "openDelay" :key="index" effect="light" :content="structureField[item].type != 'accessory' ? ''+con.content[item] : '查看'" placement="bottom">
+                      <b v-if="structureField[item].type != 'accessory'">{{con.content[item]}}</b>
+                      <b v-if="structureField[item].type == 'accessory'">
+                        <span v-if = "!con.content[item].length">无</span>
+                        <a v-if = "con.content[item].length" v-for="(file, number) in con.content[item]" :key="number" download="filename" :href="'http://cms.izhixue.cn/FileManage/DownLoad?resourceID='+file.ResourceID">{{file.FileName}}<br></a>
+                      </b>
                     </el-tooltip>
-                    <el-tooltip effect="dark" content="修改该条目" placement="bottom">
+                    <el-tooltip effect="light"  :open-delay = "openDelay" content="修改该条目" placement="bottom">
                       <b class="edit"><i @click="changeTableContent(con._id, con)" class="el-icon-edit"></i></b>
                     </el-tooltip>
-                    <el-tooltip effect="dark" content="删除该条目" placement="bottom">
+                    <el-tooltip effect="light"  :open-delay = "openDelay" content="删除该条目" placement="bottom">
                       <b class="edit"><i @click="delTableContent(con._id)" class="el-icon-delete"></i></b>
                     </el-tooltip>
                   </li>
@@ -195,6 +204,7 @@ export default {
       tableList :[],
       formLabelWidth : '110px',
       tabTotal : 0,
+      pageShow: false,
       tabCurrentPage : 1,
       structureId : '',
       structureAuthorID : '',
@@ -222,12 +232,9 @@ export default {
       editable:true,
       isDragging: false,
       delayedDragging: false,
-      fileList: [],
-      fileName: '',
-      fileids: '',
-      updatefileList: [],
-      updatefileName: '',
-      updatefileids: ''
+      uploadfileList: [],
+      updateFileList: [],
+      openDelay: 500
     }
   },
   computed:{
@@ -248,25 +255,55 @@ export default {
     this.getuploadToken();
   },
   methods:{
-    // 添加时的图片上传
-    handleChange(file, fileList) {
-        this.fileName = file.name;
-        this.fileList = fileList.slice(-3);
-        let idStr = '';
-        for(let i = 0; i< this.fileList.length; i++){
-          idStr += `,${this.fileList[i].uid}`
-        }
-        this.fileids = idStr.substring(1);
+    //选择上传文件
+    btnAttach() {
+        let that = this;
+        $('#fileAttach').click();
+        //执行上传
+        $('#fileAttach').hexUpload({
+            cms: 'http://cms.izhixue.cn/',
+            token: this.uploadtoken,
+            done: function (data) {
+              that.uploadfileList.push({
+                FileName: data.result.FileName,
+                ResourceID: data.result.ResourceID
+              })
+              $('#process').text('');
+            },
+            progress: function (data) {
+                //执行回调
+                let percentVal = Math.round((data.loaded * 100) / data.total).toFixed(2) + '%';
+                $('#process').text(percentVal);
+            }
+        })
     },
-    // 更新时的图片上传
-    updatehandleChange(file, fileList) {
-        this.updatefileName = file.name;
-        this.updatefileList = fileList.slice(-3);
-        let idStr = '';
-        for(let i = 0; i< this.updatefileList.length; i++){
-          idStr += `,${this.updatefileList[i].uid}`
-        }
-        this.updatefileids = idStr.substring(1);
+    deleteFile(index){
+      this.uploadfileList.splice(index,1)
+    },
+    //选择更新文件
+    updateBtnAttach() {
+        let that = this;
+        $('#updateFileAttach').click();
+        //执行上传
+        $('#updateFileAttach').hexUpload({
+            cms: 'http://cms.izhixue.cn/',
+            token: this.uploadtoken,
+            done: function (data) {
+              that.updateFileList.push({
+                FileName: data.result.FileName,
+                ResourceID: data.result.ResourceID
+              })
+              $('#updateProcess').text('');
+            },
+            progress: function (data) {
+                //执行回调
+                let percentVal = Math.round((data.loaded * 100) / data.total).toFixed(2) + '%';
+                $('#updateProcess').text(percentVal);
+            }
+        })
+    },
+    deleteFile(index){
+      this.uploadfileList.splice(index,1)
     },
     // 拖拽改变位置
     onMove ({relatedContext, draggedContext}) {
@@ -335,6 +372,7 @@ export default {
       }).then((res)=>{
         if(res.data.code == 0){
           this.tabTotal = res.data.total;
+          this.pageShow = this.tabTotal > 10 ? true : false;
           this.tabCurrentPage = res.data.page;
           this.tableList = res.data.tss;
           if(this.tabIndex == 0){
@@ -473,23 +511,25 @@ export default {
     },
     // 删除这张表
     delTableStructure(){
-      this.$http({
-        url: API.Interface.delTableS(this.structureId, this.token),
-        method: 'GET',
-      }).then((res)=>{
-        if(res.data.code == 0){
-          this.$message({
-              message: '删除成功!',
-              type: 'success'
-          });
-          if(this.tabIndex == this.tableList.length - 1){
-            this.tabIndex = this.tableList.length - 2;
+      if(confirm('确定删除这张表吗?')){
+        this.$http({
+          url: API.Interface.delTableS(this.structureId, this.token),
+          method: 'GET',
+        }).then((res)=>{
+          if(res.data.code == 0){
+            this.$message({
+                message: '删除成功!',
+                type: 'success'
+            });
+            if(this.tabIndex == this.tableList.length - 1){
+              this.tabIndex = this.tableList.length - 2;
+            }
+            this.getTableStructure(this.tabCurrentPage,PageSize);
           }
-          this.getTableStructure(this.tabCurrentPage,PageSize);
-        }
-      }).catch((error)=>{
-        console.log(error)
-      })
+        }).catch((error)=>{
+          console.log(error)
+        })
+      }
     },
     // 关闭更新表结构弹框
     closeUpdateTableStructure(){
@@ -527,9 +567,7 @@ export default {
       this.contentTableVisible = false;
       this.contentform = {};
       this.addDate = '';
-      this.fileList = [];
-      this.fileName = '';
-      this.fileids = '';
+      this.uploadfileList = [];
     },
     // 添加表内容
     addTableContent(){
@@ -538,7 +576,7 @@ export default {
           this.contentform[item] = this.addDate;
         }
         if(this.structureField[item].type == "accessory"){
-          this.contentform[item] = this.fileids;
+          this.contentform[item] = this.uploadfileList;
         }
       }
       this.$http({
@@ -559,9 +597,7 @@ export default {
           this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
           this.contentform = {};
           this.addDate = '';
-          this.fileList = [];
-          this.fileName = '';
-          this.fileids = '';
+          this.uploadfileList = [];
         }
       }).catch((error)=>{
         console.log(error)
@@ -572,9 +608,7 @@ export default {
         this.updatecontentTableVisible = false;
         this.contentform = {};
         this.changeDate = '';
-        this.updatefileList = [];
-        this.updatefileName = '';
-        this.updatefileids = '';
+        this.updateFileList = []
     },
     // 改变表内容
     changeTableContent(id, con){
@@ -594,8 +628,8 @@ export default {
           this.contentform[item] = this.changeDate;
         }
         if(this.structureField[item].type == "accessory"){
-          if(this.updatefileids){
-            this.contentform[item] = this.updatefileids;
+          if(this.updateFileList){
+            this.contentform[item] = this.updateFileList;
           }
         }
       }
@@ -617,9 +651,7 @@ export default {
           this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
           this.contentform = {};
           this.changeDate = '';
-          this.updatefileList = [];
-          this.updatefileName = '';
-          this.updatefileids = '';
+          this.updateFileList = [];
         }
       }).catch((error)=>{
         console.log(error)
@@ -627,29 +659,21 @@ export default {
     },
     // 删除该条表内容
     delTableContent(id){
-      this.$http({
-        url: API.Interface.delTableC(id, this.userId, this.token),
-        method: 'GET'
-      }).then((res)=>{
-        if(res.data.code == 0){
-          this.$message({
-            message: '删除成功!',
-            type: 'success'
-          })
-          this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
-        }
-      }).catch((error)=>{
-        console.log(error);
-      })
-    },
-    // 下载文件
-    downloadFile(id){
-      if(id){
-        let arr = [];
-        arr = id.split(',');
-        for (let i = 0; i < arr.length; i++) {
-          window.location.href = `http://cms.izhixue.cn/FileManage/DownLoad?resourceID=${arr[i]}`;
-        }
+      if(confirm('确定删除这条内容吗?')){
+        this.$http({
+          url: API.Interface.delTableC(id, this.userId, this.token),
+          method: 'GET'
+        }).then((res)=>{
+          if(res.data.code == 0){
+            this.$message({
+              message: '删除成功!',
+              type: 'success'
+            })
+            this.getTableContent(this.structureId, this.currentContentPage, ContentPageSize);
+          }
+        }).catch((error)=>{
+          console.log(error);
+        })
       }
     }
   },
@@ -678,8 +702,9 @@ export default {
   -o-box-sizing: border-box
   box-sizing: border-box
   position: absolute
+  min-width: 744px
   top: 50px
-  bottom: 0
+  bottom: 40px
   left: 0
   right: 0
   .tab
@@ -693,24 +718,15 @@ export default {
     -moz-box-sizing: border-box
     -o-box-sizing: border-box
     box-sizing: border-box
+    .tips
+      text-align: center
+      margin-top: -15px
+      font-size: 13px
     .add-item
       height: 43px
       border-bottom: 1px solid #f1f2f7
       text-align: center
       line-height: 43px
-      div
-        display: inline-block
-        height: 26px
-        line-height: 24px
-        border: 1px solid #00c1de
-        display: inline-block
-        padding: 0 16px
-        cursor: pointer
-        font-size: 12px
-        color: #00c1de
-        &:hover
-          background: #00c1de
-          color: #fff
     .tab-item
       height: 43px
       padding-left: 10px
@@ -723,6 +739,12 @@ export default {
       -moz-box-sizing: border-box
       -o-box-sizing: border-box
       box-sizing: border-box
+      .tab-link
+        display: inline-block
+        width: 100%
+        overflow: hidden 
+        white-space: nowrap
+        text-overflow: ellipsis
     .add-table-title
       border: 1px solid #d8dce5
       border-radius: 4px
@@ -743,6 +765,7 @@ export default {
           height: 30px
           select
             flex: 1
+            min-width: 60px
             border: none
             background: #fff
             outline: none
@@ -752,6 +775,7 @@ export default {
             outline: none
             font-size: 14px
             text-align: center
+            min-width: 70px
             border-left: 1px solid #d8dce5
             -webkit-box-sizing: border-box
             -moz-box-sizing: border-box
@@ -766,30 +790,43 @@ export default {
     .actived
       background: #fafafa
     .pages
-      position: fixed
-      bottom: 20px
-      left: 10px
+      position: absolute
+      bottom: 0px
+      left: 0px
   .detail
     margin-left: 200px
+    .upload
+      .upload-button
+        display: inline-block;
+        height: 26px;
+        line-height: 24px;
+        border: 1px solid #409EFF;
+        display: inline-block;
+        padding: 0 16px;
+        cursor: pointer;
+        font-size: 12px;
+        color: #fff;
+        background: #409EFF;
+        border-radius: 4px;
+    .fileList
+      li
+        height: 30px
+        span
+          float: left
+          height: 30px
+          line-height: 30px
+        i
+          float: right
+          height: 30px 
+          line-height: 30px
+          padding: 0 10px
+          cursor: pointer
     p   
       font-size: 14px
       color: #666
       line-height: 20px
     .addcontent
       margin-top: 10px
-      span
-        display: inline-block
-        height: 26px
-        line-height: 24px
-        border: 1px solid #00c1de
-        display: inline-block
-        padding: 0 16px
-        cursor: pointer
-        font-size: 12px
-        color: #00c1de
-        &:hover
-          background: #00c1de
-          color: #fff
     .change-table-title
       border: 1px solid #d8dce5
       border-radius: 4px
@@ -842,27 +879,27 @@ export default {
         li
           display: flex
           overflow: hidden
-          position: relative
           b 
             flex: 1
-            height: 36px
-            line-height: 36px
+            min-height: 32px
+            line-height: 32px
             font-size: 14px
             overflow: hidden
             text-overflow: ellipsis
             white-space: nowrap 
             padding-left: 6px
             padding-right: 6px
+            text-align: center
             -webkit-box-sizing: border-box
             -moz-box-sizing: border-box
             -o-box-sizing: border-box
             box-sizing: border-box
-            text-align: center
             border-right: 1px solid #999
             border-bottom: 1px solid #999
-          .download
-            color: #00c1de
-            cursor: pointer
+            a
+              font-style: normal
+              color: #00c1de
+              cursor: pointer
           .edit
             flex: 0 0 50px
             cursor: pointer

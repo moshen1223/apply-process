@@ -15,6 +15,7 @@
       </div>
     </div>
     <router-view></router-view>
+    <div class="footer">关于我们</div>
     <login v-show="loginStatus"></login>
   </div>
 </template>
@@ -165,6 +166,35 @@ export default {
 .user .user-handle
 .user-quit span:hover{
   color:#999;
+}
+.container .footer{
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  line-height: 40px;
+  letter-spacing: 1px;
+  background: #42485B;
+  font-size: 16px;
+  color: #fff;
+  text-align: center;
+}
+.self-button{
+  display: inline-block;
+  height: 26px;
+  line-height: 24px;
+  border: 1px solid #00c1de;
+  display: inline-block;
+  padding: 0 16px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #00c1de;
+  border-radius: 4px;
+}
+.self-button:hover{
+  background: #00c1de;
+  color: #fff;
 }
 .el-table th, .el-table td{
   padding: 0;
